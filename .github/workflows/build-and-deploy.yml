@@ -31,7 +31,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2' # Pilih versi PHP yang Anda gunakan
+          php-version: '8.3' # Pilih versi PHP yang Anda gunakan
           extensions: mbstring, pdo_mysql, dom, filter, gd
           coverage: none # Opsional: 'xdebug' atau 'pcov' jika Anda mengukur coverage
 

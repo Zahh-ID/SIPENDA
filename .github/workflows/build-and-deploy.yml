@@ -120,6 +120,7 @@ jobs:
               --exclude='node_modules' \
               --exclude='tests' \
               --exclude='.env' \
+              --exclude="${RELEASE_FILENAME}" \
               -czf "${RELEASE_FILENAME}" .
           ls -lh "${RELEASE_FILENAME}"
 

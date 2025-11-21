@@ -50,21 +50,21 @@ function fetchDataPendaftar() {
                     // 🔥 PERBAIKAN: Template String HTML yang Bersih
                     const row = `
                         <tr>
-                            <td>${index + 1}</td>
-                            <td>${siswa.nama_lengkap}</td>
-                            <td>${siswa.nisn}</td>
-                            <td>${siswa.jalur_pendaftaran}</td>
+                            <td data-label="No">${index + 1}</td>
+                            <td data-label="Nama Siswa">${siswa.nama_lengkap}</td>
+                            <td data-label="NISN">${siswa.nisn}</td>
+                            <td data-label="Jalur">${siswa.jalur_pendaftaran}</td>
                             
-                            <td>
+                            <td data-label="Jadwal Test">
                                 <div class="jadwal-control">
                                     <input type="date" id="jadwal-${siswa.id}" value="${siswa.jadwal_test || ''}" class="p-1 border rounded text-sm" style="max-width: 130px;">
                                     <button onclick="simpanJadwal(${siswa.id})" class="btn-simpan-jadwal">Simpan</button>
                                 </div>
                             </td>
                             
-                            <td><span class="status ${statusClass}">${siswa.status_seleksi}</span></td>
+                            <td data-label="Status Seleksi"><span class="status ${statusClass}">${siswa.status_seleksi}</span></td>
                             
-                            <td class="action-btns">
+                            <td data-label="Aksi" class="action-btns">
                                 <button onclick="updateStatusOperator(${siswa.id}, 'Diterima', false)" class="btn-small bg-green-500 hover:bg-green-700">Terima</button>
                                 <button onclick="updateStatusOperator(${siswa.id}, 'Ditolak', false)" class="btn-small bg-red-700 hover:bg-red-900">Tolak</button>
                             </td>

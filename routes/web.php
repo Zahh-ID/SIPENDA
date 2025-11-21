@@ -1,11 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\PPDBController;
-use App\Http\Controllers\StudentAuthController;
-use App\Http\Controllers\OperatorAuthController;
-use App\Http\Controllers\AdminAuthController;
 
 Route::get('/', fn() => view('index'))->name('home');
 Route::get('/info-jalur', fn() => view('info-jalur'))->name('info.jalur');
@@ -13,14 +9,7 @@ Route::get('/jadwal', fn() => view('jadwal'))->name('jadwal');
 Route::get('/daftar-sekolah', [PPDBController::class, 'showDaftarSekolah'])->name('schools.index');
 Route::post('/api/get_schools', [PPDBController::class, 'getSchoolsApi'])->name('schools.api');
 
-Route::get('/login/siswa', [StudentAuthController::class, 'showLoginForm'])->name('login'); 
-Route::post('/login/siswa', [StudentAuthController::class, 'login'])->name('login.siswa.submit');
-
-Route::get('/login/operator', [OperatorAuthController::class, 'showLoginForm'])->name('login.operator');
-Route::post('/login/operator', [OperatorAuthController::class, 'login'])->name('login.operator.submit');
-
-Route::get('/login/admin', [AdminAuthController::class, 'showLoginForm'])->name('login.admin');
-Route::post('/login/admin', [AdminAuthController::class, 'login'])->name('login.admin.submit');
+Route::get('/login', fn() => view('auth.login'))->name('login');
 
 Route::post('/logout', [PPDBController::class, 'logout'])->name('logout');
 

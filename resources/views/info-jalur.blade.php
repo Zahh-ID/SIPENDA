@@ -4,7 +4,7 @@
 @section('content')
 <section class="page-content container">
     <h2>📝 Kuota dan Jalur Pendaftaran</h2>
-    <p class="subtitle">Rincian kuota **minimal** dan **maksimal** untuk setiap jenjang pendidikan, sesuai peraturan.</p>
+    <p class="subtitle">Rincian kuota minimal dan maksimal untuk setiap jenjang pendidikan, sesuai peraturan.</p>
     
     <div class="jalur-grid">
         <div class="jalur-card sd">
@@ -35,6 +35,6 @@
             </ul>
         </div>
     </div>
-    <p class="note">**Catatan:** Sisa kuota di luar minimum/maksimum yang ditentukan bersifat fleksibel.</p>
+    <p class="note">Catatan: Sisa kuota di luar minimum/maksimum yang ditentukan bersifat fleksibel.</p>
 </section>
 @endsection

@@ -48,6 +48,45 @@
         .status.diterima { background-color: #e8f5e9; color: #2e7d32; }
         .status.ditolak { background-color: #ffebee; color: #c62828; }
         .action-btns { display: flex; gap: 5px; }
+
+        @media (max-width: 768px) {
+            .stat-cards {
+                flex-direction: column;
+            }
+            .table-container table thead {
+                display: none;
+            }
+            .table-container table, .table-container table tbody, .table-container table tr, .table-container table td {
+                display: block;
+                width: 100%;
+            }
+            .table-container table tr {
+                margin-bottom: 15px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                padding: 10px;
+            }
+            .table-container table td {
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+                border: none;
+                padding-bottom: 5px;
+            }
+            .table-container table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: bold;
+            }
+            .action-btns, .jadwal-control {
+                justify-content: flex-end;
+            }
+        }
     </style>
 @endsection
 
@@ -102,7 +141,8 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof fetchDataPendaftar === 'function') {
-            fetchDataPendaftar();
+            // This function is defined in operator.js
+            fetchDataPendaftar(true); // Passing true to indicate it's the initial load
         }
     });
     

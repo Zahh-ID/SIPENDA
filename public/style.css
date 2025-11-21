@@ -402,6 +402,17 @@ footer .container {
     outline: none;
     box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
 }
+.search-content {
+    display: none;
+    padding-top: 20px; /* Tambahkan padding atas agar tidak terlalu mepet */
+}
+
+/* Hanya tampilkan elemen yang memiliki class 'active' */
+.search-content.active {
+    display: block;
+}
+
+/* --- Pastikan Style Tab Indicator juga Ada (dari kode login) --- */
 .login-tab-container {
     display: flex;
     margin-bottom: 20px;
@@ -427,6 +438,13 @@ footer .container {
 }
 .login-content.active {
     display: block;
+}
+
+@media (max-width: 480px) {
+    .login-tab {
+        padding: 12px 5px;
+        font-size: 0.8em;
+    }
 }
 
 @media (max-width: 900px) {
@@ -493,8 +511,42 @@ footer .container {
     }
     footer .container {
         flex-direction: column;
+        gap: 15px;
+        text-align: center;
     }
 }
+
+@media (max-width: 480px) {
+    .header-main.container {
+        padding: 10px 15px;
+    }
+    .logo-area h1, .logo-text-wrapper h1 {
+        font-size: 1.5em;
+    }
+    .logo-area .logo-subtitle, .logo-area p {
+        font-size: 0.7em;
+    }
+    .hero-content h1, .hero-content h2 {
+        font-size: 2.5em;
+    }
+    .hero-content p {
+        font-size: 1em;
+    }
+    .btn-primary, .btn-secondary {
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+    .form-container {
+        padding: 20px;
+    }
+    .timeline li {
+        padding-left: 60px;
+    }
+    .timeline li::after {
+        left: 10px;
+    }
+}
+
 .logo-area {
     display: flex;
     align-items: center; 

@@ -57,6 +57,42 @@
         .status { padding: 5px 10px; border-radius: 4px; font-weight: 600; }
         .status.diterima { background-color: #e8f5e9; color: #2e7d32; }
         .status.ditolak { background-color: #ffebee; color: #c62828; }
+        
+        @media (max-width: 768px) {
+            .table-container table thead {
+                display: none;
+            }
+            .table-container table, .table-container table tbody, .table-container table tr, .table-container table td {
+                display: block;
+                width: 100%;
+            }
+            .table-container table tr {
+                margin-bottom: 15px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                padding: 10px;
+            }
+            .table-container table td {
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+                border: none;
+                padding-bottom: 5px;
+            }
+            .table-container table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: bold;
+            }
+            .action-btns {
+                justify-content: flex-end;
+            }
+        }
     </style>
 @endsection
 
@@ -104,13 +140,13 @@
                         const statusClass = siswa.status_seleksi.toLowerCase().replace(/\s+/g, '');
     const row = `
         <tr>
-            <td>${siswa.id}</td>
-            <td><strong>${siswa.sekolah_tujuan}</strong></td>
-            <td>${siswa.nama_lengkap} (${siswa.nisn})</td>
-            <td><span class="status ${statusClass}">${siswa.status_seleksi}</span></td>
-            <td>${siswa.jadwal_test || 'N/A'}</td>
+            <td data-label="ID">${siswa.id}</td>
+            <td data-label="Sekolah Asal Pengajuan"><strong>${siswa.sekolah_tujuan}</strong></td>
+            <td data-label="Nama Siswa (NISN)">${siswa.nama_lengkap} (${siswa.nisn})</td>
+            <td data-label="Status Seleksi Operator"><span class="status ${statusClass}">${siswa.status_seleksi}</span></td>
+            <td data-label="Jadwal Test">${siswa.jadwal_test || 'N/A'}</td>
 
-            <td class="action-btns">
+            <td data-label="Aksi Admin Dinas" class="action-btns">
                 <button onclick="updateApprovalAdmin(${siswa.id}, 'Approved')" class="btn-small bg-blue-500 hover:bg-blue-700">ACC (Setujui)</button>
                 <button onclick="updateApprovalAdmin(${siswa.id}, 'Rejected')" class="btn-small bg-red-700 hover:bg-red-900">Tolak Global</button>
             </td>

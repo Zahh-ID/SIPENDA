@@ -18,7 +18,7 @@
                     <img src="{{ asset('assets/images/logo.svg') }}" alt="Logo PPDB" class="header-logo">
                     <div class="logo-text-wrapper">
                         <h1>SIPENDA</h1>
-                        <p class="logo-subtitle">Sistem Informasi PPDB [Nama Kota/Dinas]</p>
+                        <p class="logo-subtitle">Sistem Informasi PPDB Jawa Timur</p>
                     </div>
                 </a>
             </div>
@@ -52,7 +52,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2024 PPDB V.2.0 - [Nama Kota/Dinas Pendidikan]. Hak Cipta Dilindungi.</p>
+            <p>&copy; 2025 SIPENDA - Jawa Timur. Hak Cipta Masih Pending.</p>
             <div class="footer-links">
                 <a href="#">FAQ</a> | <a href="#">Kontak Kami</a> | <a href="#">Kebijakan Privasi</a>
             </div>

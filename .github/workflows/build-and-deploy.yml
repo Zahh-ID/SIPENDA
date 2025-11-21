@@ -77,6 +77,15 @@ jobs:
     needs: build-test
     if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment:
+      name: production
+    env:
+      RELEASE_FILENAME: sipenda-${{ github.sha }}.tar.gz
+      SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+      SSH_USERNAME: ${{ secrets.PROD_SSH_USERNAME }}
+      SSH_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+      SSH_PORT: ${{ secrets.PROD_SSH_PORT || '22' }}
+      DEPLOY_PATH: ${{ vars.PROD_DEPLOY_PATH }}
     
     steps:
       - name: Checkout Code
@@ -84,9 +93,75 @@ jobs:
         with:
             fetch-depth: 1 
       
-      - name: Mock Deployment Step
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, dom, filter, gd
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Production Composer Dependencies
+        run: composer install --prefer-dist --optimize-autoloader --no-dev --no-interaction --no-progress
+
+      - name: Build Production Assets
         run: |
-          echo "--- Starting Deployment (Example) ---"
-          # Ganti baris di bawah ini dengan perintah deployment Anda yang sebenarnya
-          echo "Deploying using SSH or a specific deployment tool (e.g., rsync, Deployer, Envoyer)."
-          echo "Deployment successful for commit ${{ github.sha }} to production."
+          npm ci
+          npm run build
+
+      - name: Package Application
+        run: |
+          tar --exclude='.git' \
+              --exclude='.github' \
+              --exclude='node_modules' \
+              --exclude='tests' \
+              --exclude='.env' \
+              -czf "${RELEASE_FILENAME}" .
+          ls -lh "${RELEASE_FILENAME}"
+
+      - name: Add SSH Host Key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${SSH_PORT}" "${SSH_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Upload Release to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USERNAME }}
+          key: ${{ env.SSH_KEY }}
+          port: ${{ env.SSH_PORT }}
+          source: ${{ env.RELEASE_FILENAME }}
+          target: /tmp
+
+      - name: Run Remote Deployment Commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USERNAME }}
+          key: ${{ env.SSH_KEY }}
+          port: ${{ env.SSH_PORT }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            if [ -z "${{ env.DEPLOY_PATH }}" ]; then
+              echo "Repository variable PROD_DEPLOY_PATH is not configured." >&2
+              exit 1
+            fi
+            RELEASE_FILE="/tmp/${{ env.RELEASE_FILENAME }}"
+            APP_PATH="${{ env.DEPLOY_PATH }}"
+            mkdir -p "${APP_PATH}"
+            find "${APP_PATH}" -mindepth 1 -maxdepth 1 ! -name '.env' ! -name 'storage' -exec rm -rf {} +
+            tar -xzf "${RELEASE_FILE}" -C "${APP_PATH}"
+            rm -f "${RELEASE_FILE}"
+            cd "${APP_PATH}"
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan migrate --force
+            php artisan storage:link
+            php artisan queue:restart || true

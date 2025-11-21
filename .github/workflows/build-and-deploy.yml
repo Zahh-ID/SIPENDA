@@ -1,92 +1,123 @@
-name: Laravel CI/CD Pipeline
+name: Deploy
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    branches: ["main"]
+  workflow_dispatch:
+
+concurrency:
+  group: kostin-deploy
+  cancel-in-progress: true
 
 jobs:
-  build-test:
+  deploy:
     runs-on: ubuntu-latest
-    
-    # Layanan yang dibutuhkan untuk menjalankan PHPUnit
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: true
-          MYSQL_DATABASE: testing
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    environment: production
+    env:
+      SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+      SSH_USER: ${{ secrets.PROD_SSH_USERNAME }}
+      SSH_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+      SSH_PORT: ${{ secrets.PROD_SSH_PORT || '22' }}
+      DEPLOY_PATH: ${{ vars.PROD_DEPLOY_PATH }}
+      PHP_FPM_SERVICE: ${{ secrets.PROD_PHP_FPM_SERVICE || 'php8.3-fpm' }}
+      NGINX_SERVICE: ${{ secrets.PROD_NGINX_SERVICE || 'nginx' }}
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # Step 1: Setup PHP Environment
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3' # Pilih versi PHP yang Anda gunakan
-          extensions: mbstring, pdo_mysql, dom, filter, gd
-          coverage: none # Opsional: 'xdebug' atau 'pcov' jika Anda mengukur coverage
-
-      # Step 2: Install Composer Dependencies
-      - name: Install Composer Dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
-
-      # Step 3: Setup Node.js and Install NPM Dependencies
-      - name: Setup Node.js and Install NPM
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20' 
-      - name: Install NPM and Build Assets (Vite)
-        # Gunakan 'npm install' untuk menginstal dependencies frontend dan 'npm run build' untuk kompilasi aset (misal: CSS/JS)
+          node-version: "20"
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: npm-
+
+      - name: Install & Build
         run: |
-          npm install
+          npm ci --ignore-scripts
           npm run build
 
-      # Step 4: Run Tests (PHPUnit)
-      - name: Setup Laravel Environment (.env)
-        # Kunci aplikasi diperlukan untuk menjalankan testing
-        run: |
-          cp .env.example .env
-          php artisan key:generate
-          # Konfigurasi database untuk testing
-          sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=mysql/' .env
-          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/' .env
-          sed -i 's/DB_PORT=3306/DB_PORT=3306/' .env
-          sed -i 's/DB_DATABASE=laravel/DB_DATABASE=testing/' .env
-          sed -i 's/DB_USERNAME=root/DB_USERNAME=root/' .env
-          sed -i 's/DB_PASSWORD=/DB_PASSWORD=/' .env
-
-      - name: Run Laravel Migrations
-        run: php artisan migrate --env=testing --force
-
-      - name: Run Pest Tests
-        run: ./vendor/bin/pest 
-
-  # CD - Continuous Deployment Job
-  # Job ini sekarang hanya akan berjalan jika Anda menggunakan action deployment (misal: Deployer, Laravel Envoy, atau langsung ke cloud)
-  deploy:
-    name: Deploy to Production
-    needs: build-test
-    if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.8.0
         with:
-            fetch-depth: 1 
-      
-      - name: Mock Deployment Step
+          ssh-private-key: ${{ env.SSH_KEY }}
+
+      - name: Test SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          port: ${{ env.SSH_PORT }}
+          key: ${{ env.SSH_KEY }}
+          script: 'echo "OK $(hostname)"; uname -a'
+
+      - name: Ensure target dir exists
         run: |
-          echo "--- Starting Deployment (Example) ---"
-          # Ganti baris di bawah ini dengan perintah deployment Anda yang sebenarnya
-          echo "Deploying using SSH or a specific deployment tool (e.g., rsync, Deployer, Envoyer)."
-          echo "Deployment successful for commit ${{ github.sha }} to production."
+          if [ -z "${DEPLOY_PATH}" ]; then
+            echo "Repository variable PROD_DEPLOY_PATH must be set." >&2
+            exit 1
+          fi
+          ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" \
+            "${SSH_USER}@${SSH_HOST}" \
+            "mkdir -p '${DEPLOY_PATH}'"
+
+      - name: Rsync source to server
+        run: |
+          rsync -az --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='node_modules/' \
+            --exclude='vendor/' \
+            --exclude='.env' \
+            -e "ssh -o StrictHostKeyChecking=no -p ${SSH_PORT}" \
+            ./ "${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}"
+
+      - name: Post-deploy tasks
+        run: |
+          ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" \
+            "${SSH_USER}@${SSH_HOST}" bash -lc "
+              set -e
+              cd '${DEPLOY_PATH}'
+
+              if ! command -v composer >/dev/null 2>&1; then
+                curl -sS https://getcomposer.org/installer | php
+                sudo mv composer.phar /usr/local/bin/composer
+              fi
+
+              if [ ! -f .env ]; then
+                cp .env.example .env || true
+                php artisan key:generate || true
+                sed -i 's/^APP_ENV=.*/APP_ENV=production/' .env || true
+                sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' .env || true
+                sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env || true
+                sed -i 's/^DB_PORT=.*/DB_PORT=3306/' .env || true
+                sed -i 's/^DB_DATABASE=.*/DB_DATABASE=kostin/' .env || true
+                sed -i 's/^DB_USERNAME=.*/DB_USERNAME=kostin/' .env || true
+                sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=TugasPW!123/' .env || true
+              fi
+
+              composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+
+              php artisan storage:link || true
+              php artisan view:clear || true
+              php artisan config:cache
+              php artisan route:cache
+              php artisan view:cache
+              php artisan event:cache
+              php artisan migrate --force || true
+              php artisan l5-swagger:generate || true
+
+              chgrp -R www-data storage bootstrap/cache || true
+              chmod -R ug+rwx storage bootstrap/cache || true
+
+              sudo systemctl reload '${PHP_FPM_SERVICE}' || true
+              sudo systemctl reload '${NGINX_SERVICE}' || true
+
+              echo 'Deploy Kostin selesai ✅'
+            "

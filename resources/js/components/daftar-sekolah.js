@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // const schoolApiUrl = '{{ route('schools.api') }}';
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     const loadingStatus = document.getElementById('loading-status');
     
     document.getElementById('btn-cari-zonasi').addEventListener('click', function() {
@@ -52,25 +51,13 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingStatus.style.color = '#ff9800';
         loadingStatus.innerHTML = '<p>Mencari sekolah terdekat dari server...</p>';
         
-        fetch(window.schoolApiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken 
-            },
-            body: JSON.stringify({
-                jenjang: jenjang,
-                daerah: daerah, 
-                nama_sekolah: namaSekolah
-            })
+        axios.post(window.schoolApiUrl, {
+            jenjang: jenjang,
+            daerah: daerah, 
+            nama_sekolah: namaSekolah
         })
         .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw err; });
-            }
-            return response.json();
-        })
-        .then(data => {
+            const data = response.data;
             loadingStatus.style.display = 'none';
             if (data.status === 'success') {
                 tampilkanHasilFilter(jenjang, daerah, data.schools);
@@ -79,8 +66,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            displayError('Gagal mengambil data dari server. Detail: ' + (error.message || 'Error koneksi.'));
-            console.error('Fetch Error:', error);
+            let errorMessage = 'Gagal mengambil data dari server.';
+            if (error.response && error.response.data && error.response.data.message) {
+                errorMessage += ' Detail: ' + error.response.data.message;
+            } else if (error.message) {
+                errorMessage += ' Detail: ' + error.message;
+            }
+            displayError(errorMessage);
+            console.error('Axios Error:', error);
         });
     }
     

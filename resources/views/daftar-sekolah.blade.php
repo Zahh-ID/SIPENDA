@@ -54,6 +54,6 @@
 
 </script>
 
-<script src="{{ asset('js/components/daftar-sekolah.js') }}"></script>
-
 @endsection
+
+

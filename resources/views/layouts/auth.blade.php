@@ -8,6 +8,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    @livewireStyles
     @yield('styles')
 </head>
 <body style="background-color: #f4f7f9;">
@@ -16,6 +17,7 @@
         @yield('content')
     </main>
 
+    @livewireScripts
     @yield('scripts')
 </body>
 </html>

@@ -8,7 +8,7 @@ class StudentAuthController extends Controller
 {
     public function showLoginForm()
     {
-        return view('login-siswa'); // Menggunakan view baru
+        return view('auth.login'); // Menggunakan view yang sudah ada
     }
 
     public function login(Request $request)

@@ -1,33 +1,57 @@
 document.addEventListener('DOMContentLoaded', function() {
 
-    // Exit if the main search button isn't on the page
-    if (!document.getElementById('btn-cari')) return;
+    if (!document.getElementById('zonasi-search')) return;
 
+    document.querySelectorAll('.login-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetTab = this.getAttribute('data-tab');
+            
+            document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.search-content').forEach(c => c.classList.remove('active'));
+
+            this.classList.add('active');
+            document.getElementById(targetTab + '-search').classList.add('active');
+            
+            document.getElementById('loading-status').style.display = 'none';
+            document.getElementById('school-summary').innerHTML = '';
+            document.getElementById('school-details').innerHTML = '';
+        });
+    });
+
+    // const schoolApiUrl = '{{ route('schools.api') }}';
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     const loadingStatus = document.getElementById('loading-status');
     
-    document.getElementById('btn-cari').addEventListener('click', function() {
+    document.getElementById('btn-cari-zonasi').addEventListener('click', function() {
         const jenjang = document.getElementById('jenjang-filter').value;
         const daerah = document.getElementById('daerah-filter').value.trim();
-        const namaSekolah = document.getElementById('nama-sekolah-filter').value.trim();
         
-        if (!jenjang) {
-            displayError('<p>Jenjang Sekolah wajib diisi untuk memulai pencarian.</p>');
+        if (!jenjang || !daerah) {
+            displayError('<p>Jenjang Sekolah dan Asal Daerah wajib diisi untuk pencarian Zonasi.</p>');
             return;
         }
         
-        performSearch(jenjang, daerah, namaSekolah);
+        performSearch(jenjang, daerah, '');
     });
+
+    document.getElementById('btn-cari-nama').addEventListener('click', function() {
+        const jenjang = document.getElementById('jenjang-nama-filter').value;
+        const namaSekolah = document.getElementById('nama-sekolah-filter').value.trim();
+
+        if (!jenjang || !namaSekolah) {
+            displayError('<p>Jenjang dan Nama Sekolah wajib diisi untuk pencarian ini.</p>');
+            return;
+        }
+
+        performSearch(jenjang, '', namaSekolah);
+    });
+
 
     function performSearch(jenjang, daerah, namaSekolah) {
         loadingStatus.style.display = 'block';
         loadingStatus.style.color = '#ff9800';
-        loadingStatus.innerHTML = '<p>Mencari sekolah...</p>';
+        loadingStatus.innerHTML = '<p>Mencari sekolah terdekat dari server...</p>';
         
-        // Clear previous results
-        document.getElementById('school-summary').innerHTML = '';
-        document.getElementById('school-details').innerHTML = '';
-
         fetch(window.schoolApiUrl, {
             method: 'POST',
             headers: {
@@ -42,17 +66,16 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => {
             if (!response.ok) {
-                // Try to parse error response as JSON, otherwise throw a generic error
-                return response.json().then(err => { throw err; }).catch(() => { throw new Error('Server returned an error.'); });
+                return response.json().then(err => { throw err; });
             }
             return response.json();
         })
         .then(data => {
             loadingStatus.style.display = 'none';
-            if (data.status === 'success' || data.status === 'not_found') {
-                tampilkanHasilFilter(jenjang, daerah || 'Pencarian', data.schools, data.message);
+            if (data.status === 'success') {
+                tampilkanHasilFilter(jenjang, daerah, data.schools);
             } else {
-                displayError(data.message || 'Terjadi kesalahan yang tidak diketahui.');
+                tampilkanHasilFilter(jenjang, daerah, [], data.message);
             }
         })
         .catch(error => {
@@ -63,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function displayError(message) {
         loadingStatus.style.display = 'block';
-        loadingStatus.style.color = '#d32f2f'; // Error color
+        loadingStatus.style.color = '#d32f2f';
         loadingStatus.innerHTML = message;
         document.getElementById('school-summary').innerHTML = '';
         document.getElementById('school-details').innerHTML = '';
@@ -73,63 +96,73 @@ document.addEventListener('DOMContentLoaded', function() {
         const maxChoice = jenjang === 'SD' ? 1 : (jenjang === 'SMP' ? 3 : 5);
         const jenjangFull = jenjang === 'SD' ? 'Sekolah Dasar (SD)' : (jenjang === 'SMP' ? 'Sekolah Menengah Pertama (SMP)' : 'Sekolah Menengah Atas (SMA)');
         
-        const areaDisplay = daerah ? `di ${daerah}` : '';
+        const areaDisplay = daerah ? `Sekitar ${daerah}` : 'Hasil Pencarian';
 
         return `
-            <div class="school-count ${jenjang.toLowerCase()} w-full text-center bg-blue-50 p-6 rounded-lg">
-                <h4 class="text-xl font-semibold text-blue-800">${jenjangFull}</h4>
-                <p class="text-5xl font-bold my-2 text-blue-900">${count}</p>
-                <p class="text-lg text-gray-700">Sekolah ditemukan ${areaDisplay}</p>
-                <span class="inline-block bg-blue-200 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full mt-2">Pilihan Maksimal: ${maxChoice}</span>
+            <div class="school-count ${jenjang.toLowerCase()}">
+                <h4>${jenjangFull}</h4>
+                <p style="font-size: 2.5em; margin-bottom: 5px;">${count} Sekolah di ${areaDisplay}</p>
+                <span class="max-choice">Pilihan Maks: ${maxChoice}</span>
             </div>
         `;
     }
 
     function createDetailsHTML(jenjang, daerah, schoolData) {
-        if (!schoolData || schoolData.length === 0) {
-            return ''; // Summary will show the main message
+        const count = schoolData.length;
+        if (count === 0) {
+            return `<h3 style="margin-top: 0;">Tidak ada sekolah ditemukan untuk jenjang ${jenjang}.</h3>`;
         }
 
         let listItems = schoolData.map((school, index) => {
+            const order = index + 1;
             const encodedSchoolName = encodeURIComponent(school.nama_sekolah);
             return `
-                <li class="border-b border-gray-200 py-4">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <strong class="text-lg font-semibold text-gray-800">${index + 1}. ${school.nama_sekolah}</strong>
-                            <p class="text-gray-600">
-                                Jarak: ${school.jarak || 'N/A'} | Kuota: ${school.kuota || 'N/A'} Siswa
-                            </p>
-                        </div>
-                        <a href="pendaftaran?sekolah=${encodedSchoolName}" class="btn-small btn-primary whitespace-nowrap">Daftar</a>
+                <li>
+                    <strong>${order}. ${school.nama_sekolah}</strong> - Jarak Terdekat: ${school.jarak || 'N/A'} <br>
+                    Kuota: ${school.kuota} Siswa - Keterangan: ${school.detail || 'Informasi umum.'}
+                    <div>
+                        <a href="#" style="margin-right: 10px;">Lihat Peta Zonasi</a>
+                        <a href="pendaftaran?sekolah=${encodedSchoolName}" class="btn-small">Daftar Sekarang</a>
                     </div>
                 </li>
             `;
         }).join('');
 
         return `
-            <div class="bg-white p-6 rounded-lg shadow-md mt-6">
-                <h3 class="text-2xl font-bold mb-4">Detail Sekolah (${schoolData.length} Hasil)</h3>
+            <h3 style="margin-top: 0;">Daftar Sekolah Jenjang ${jenjang} (${count} Sekolah)</h3>
+            <div class="sekolah-detail">
+                <h4>Hasil di Area ${daerah || 'Pencarian'}</h4>
                 <ul>${listItems}</ul>
             </div>
         `;
     }
     
-    function tampilkanHasilFilter(jenjang, daerah, schoolData, message = null) {
+    function tampilkanHasilFilter(jenjang, daerah, schoolData, errorMessage = null) {
         const summaryDiv = document.getElementById('school-summary');
         const detailsDiv = document.getElementById('school-details');
         
         summaryDiv.innerHTML = '';
         detailsDiv.innerHTML = '';
 
-        const count = schoolData ? schoolData.length : 0;
+        const count = schoolData.length;
+        
+        if (errorMessage) {
+            detailsDiv.innerHTML = `<h3 style="color:#d32f2f;">${errorMessage}</h3>`;
+            return;
+        }
 
+        summaryDiv.style.display = 'flex';
         summaryDiv.innerHTML = createSummaryHTML(jenjang, daerah, count);
 
-        if (count > 0) {
-            detailsDiv.innerHTML = createDetailsHTML(jenjang, daerah, schoolData);
-        } else if (message) {
-            detailsDiv.innerHTML = `<div class="text-center mt-6"><p class="text-lg text-gray-500">${message}</p></div>`;
-        }
+        detailsDiv.style.display = 'block';
+        detailsDiv.innerHTML = createDetailsHTML(jenjang, daerah, schoolData);
     }
+    // Pasang class form-control pada input/select di form-container
+    document.querySelectorAll('.form-container input[type="text"], .form-container select').forEach(el => {
+        el.classList.add('form-control');
+        el.style.padding = '12px';
+        el.style.height = '50px';
+        el.style.fontSize = '16px';
+        el.style.width = '100%';
+    });
 });

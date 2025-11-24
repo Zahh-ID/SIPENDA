@@ -16,21 +16,16 @@
 
 // operator.js (Fungsi fetchDataPendaftar yang diperbaiki)
 
-function fetchDataPendaftar() {
+window.fetchDataPendaftar = function() {
     const pendaftarTableBody = document.getElementById('pendaftar-table-body');
     const totalPendaftarCount = document.getElementById('total-pendaftar');
     const perluVerifikasiCount = document.getElementById('perlu-verifikasi');
     
     pendaftarTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Memuat data pendaftar...</td></tr>';
 
-    fetch(window.operatorPendaftarApi) 
+    axios.get(window.operatorPendaftarApi)
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Gagal mengambil data dari server. Status: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
+            const data = response.data;
             pendaftarTableBody.innerHTML = '';
             const pendaftarData = data.pendaftar || [];
             
@@ -38,7 +33,7 @@ function fetchDataPendaftar() {
                 totalPendaftarCount.textContent = pendaftarData.length;
                 
                 let verifikasiCount = 0;
-                let rowsHTML = ''; // Inisialisasi string untuk menampung semua baris
+                let rowsHTML = '';
                 
                 pendaftarData.forEach((siswa, index) => {
                     if (siswa.status_seleksi === 'Pending') {
@@ -47,7 +42,6 @@ function fetchDataPendaftar() {
                     
                     const statusClass = siswa.status_seleksi.toLowerCase().replace(/\s+/g, '');
                     
-                    // 🔥 PERBAIKAN: Template String HTML yang Bersih
                     const row = `
                         <tr>
                             <td data-label="No">${index + 1}</td>
@@ -71,10 +65,10 @@ function fetchDataPendaftar() {
                         </tr>
                     `;
                     
-                    rowsHTML += row; // Tambahkan baris ke akumulator
+                    rowsHTML += row;
                 });
                 
-                pendaftarTableBody.innerHTML = rowsHTML; // Masukkan semua baris ke DOM setelah loop selesai
+                pendaftarTableBody.innerHTML = rowsHTML;
                 perluVerifikasiCount.textContent = verifikasiCount;
                 
             } else {
@@ -85,11 +79,10 @@ function fetchDataPendaftar() {
         })
         .catch(error => {
             pendaftarTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Gagal memuat data: ${error.message || 'Terjadi kesalahan koneksi atau server.'}</td></tr>`;
-            console.error('Fetch Error:', error);
+            console.error('Axios Error:', error);
         });
 }
 
-// Tambahkan fungsi baru ini
 window.simpanJadwal = function(studentId) {
     const jadwalTest = document.getElementById(`jadwal-${studentId}`).value;
     
@@ -98,45 +91,35 @@ window.simpanJadwal = function(studentId) {
         return;
     }
     
-    // Panggil updateStatusOperator dengan status='Pending' (hanya update jadwal)
     updateStatusOperator(studentId, 'Pending', true, jadwalTest);
 };
 
-
-// Modifikasi fungsi updateStatusOperator agar lebih fleksibel
 window.updateStatusOperator = function(studentId, newStatus, isJadwalOnly = false, customJadwal = null) {
     const currentJadwal = document.getElementById(`jadwal-${studentId}`).value;
     const jadwalToSubmit = customJadwal || currentJadwal;
     
-    // Aturan: Jika statusnya Diterima/Ditolak, jadwal harus diisi.
     if (newStatus !== 'Pending' && !jadwalToSubmit) {
         alert('Jadwal Test harus diisi sebelum status Diterima/Ditolak.');
         return;
     }
     
-    // Konfirmasi hanya jika bukan mode simpan jadwal
     if (!isJadwalOnly && !confirm(`Yakin mengubah status siswa ID ${studentId} menjadi ${newStatus}?`)) {
          return;
     }
 
-    fetch('/api/operator/seleksi', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.globalCsrfToken },
-        body: JSON.stringify({
-            student_id: studentId,
-            status_seleksi: newStatus,
-            jadwal_test: jadwalToSubmit,
-            _token: window.globalCsrfToken
-        })
+    axios.post('/api/operator/seleksi', {
+        student_id: studentId,
+        status_seleksi: newStatus,
+        jadwal_test: jadwalToSubmit,
     })
-    .then(response => response.json())
-    .then(data => {
-        alert(data.message || 'Data berhasil disimpan.');
+    .then(response => {
+        alert(response.data.message || 'Data berhasil disimpan.');
         fetchDataPendaftar();
     })
     .catch(error => {
         alert('Gagal memperbarui status.');
-        console.error('Error:', error);
+        console.error('Axios Error:', error);
     });
 };
+
 // ... (logic submitApproval sudah dipindahkan ke Blade)

@@ -136,13 +136,11 @@
 @section('scripts')
 <script>
     window.sekolahTanggungJawab = '{{ $sekolahTanggungJawab }}';
-    window.globalCsrfToken = '{{ csrf_token() }}';
     window.operatorPendaftarApi = '{{ route('operator.pendaftar.api') }}';
 
     document.addEventListener('DOMContentLoaded', function() {
-        if (typeof fetchDataPendaftar === 'function') {
-            // This function is defined in operator.js
-            fetchDataPendaftar(true); // Passing true to indicate it's the initial load
+        if (typeof window.fetchDataPendaftar === 'function') {
+            window.fetchDataPendaftar(); 
         }
     });
     
@@ -151,13 +149,9 @@
             return;
         }
          
-        fetch(`/api/operator/ajukan/${encodeURIComponent(sekolahName)}`, {
-             method: 'POST',
-             headers: { 'X-CSRF-TOKEN': window.globalCsrfToken },
-         })
-         .then(response => response.json())
-         .then(data => {
-             alert(data.message);
+        axios.post(`/api/operator/ajukan/${encodeURIComponent(sekolahName)}`)
+         .then(response => {
+             alert(response.data.message);
          })
          .catch(error => {
              alert('Gagal mengajukan ke admin.');
@@ -166,5 +160,4 @@
     }
 
 </script>
-<script src="{{ asset('operator.js') }}"></script>
 @endsection

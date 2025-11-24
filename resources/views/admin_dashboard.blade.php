@@ -131,35 +131,34 @@
 
 @section('scripts')
 <script>
-    const csrfToken = '{{ csrf_token() }}';
-
     function fetchPengajuan() {
         const tableBody = document.getElementById('approval-table-body');
         tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Memuat permintaan approval...</td></tr>';
 
-        fetch('/api/admin/pengajuan')
-            .then(response => response.json())
-            .then(data => {
+        axios.get('/api/admin/pengajuan')
+            .then(response => {
+                const tableBody = document.getElementById('approval-table-body');
                 tableBody.innerHTML = '';
+                const data = response.data;
                 const pengajuanData = data.pengajuan || [];
                 
                 if (data.status === 'success' && pengajuanData.length > 0) {
                     pengajuanData.forEach((siswa, index) => {
                         const statusClass = siswa.status_seleksi.toLowerCase().replace(/\s+/g, '');
-    const row = `
-        <tr>
-            <td data-label="ID">${siswa.id}</td>
-            <td data-label="Sekolah Asal Pengajuan"><strong>${siswa.sekolah_tujuan}</strong></td>
-            <td data-label="Nama Siswa (NISN)">${siswa.nama_lengkap} (${siswa.nisn})</td>
-            <td data-label="Status Seleksi Operator"><span class="status ${statusClass}">${siswa.status_seleksi}</span></td>
-            <td data-label="Jadwal Test">${siswa.jadwal_test || 'N/A'}</td>
+                        const row = `
+                            <tr>
+                                <td data-label="ID">${siswa.id}</td>
+                                <td data-label="Sekolah Asal Pengajuan"><strong>${siswa.sekolah_tujuan}</strong></td>
+                                <td data-label="Nama Siswa (NISN)">${siswa.nama_lengkap} (${siswa.nisn})</td>
+                                <td data-label="Status Seleksi Operator"><span class="status ${statusClass}">${siswa.status_seleksi}</span></td>
+                                <td data-label="Jadwal Test">${siswa.jadwal_test || 'N/A'}</td>
 
-            <td data-label="Aksi Admin Dinas" class="action-btns">
-                <button onclick="updateApprovalAdmin(${siswa.id}, 'Approved')" class="btn-small bg-blue-500 hover:bg-blue-700">ACC (Setujui)</button>
-                <button onclick="updateApprovalAdmin(${siswa.id}, 'Rejected')" class="btn-small bg-red-700 hover:bg-red-900">Tolak Global</button>
-            </td>
-        </tr>
-    `;
+                                <td data-label="Aksi Admin Dinas" class="action-btns">
+                                    <button onclick="updateApprovalAdmin(${siswa.id}, 'Approved')" class="btn-small bg-blue-500 hover:bg-blue-700">ACC (Setujui)</button>
+                                    <button onclick="updateApprovalAdmin(${siswa.id}, 'Rejected')" class="btn-small bg-red-700 hover:bg-red-900">Tolak Global</button>
+                                </td>
+                            </tr>
+                        `;
                         tableBody.innerHTML += row;
                     });
                 } else {
@@ -171,18 +170,12 @@
     window.updateApprovalAdmin = function(studentId, newApprovalStatus) {
         if (!confirm(`Yakin ${newApprovalStatus} status siswa ID ${studentId}?`)) { return; }
         
-        fetch('/api/admin/approval', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-            body: JSON.stringify({
-                student_id: studentId,
-                status_approval: newApprovalStatus,
-                _token: csrfToken
-            })
+        axios.post('/api/admin/approval', {
+            student_id: studentId,
+            status_approval: newApprovalStatus,
         })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message || 'Approval berhasil dilakukan.');
+        .then(response => {
+            alert(response.data.message || 'Approval berhasil dilakukan.');
             fetchPengajuan(); // Refresh tabel
         })
         .catch(error => {

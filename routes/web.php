@@ -33,4 +33,10 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/api/admin/pengajuan', [PPDBController::class, 'getPengajuanOperatorApi'])->name('admin.pengajuan.api');
     Route::post('/api/admin/approval', [PPDBController::class, 'updateApprovalAdmin'])->name('admin.approval.update');
     Route::get('/api/admin/all_pendaftar', [PPDBController::class, 'getAllPendaftarApi'])->name('admin.pendaftar.api');
+
+    // Secret Registration Routes
+    Route::get('/admin/register/operator', [PPDBController::class, 'showOperatorRegistrationForm'])->name('admin.register.operator.form');
+    Route::post('/admin/register/operator', [PPDBController::class, 'registerOperator'])->name('admin.register.operator.submit');
+    Route::get('/admin/register/admin', [PPDBController::class, 'showAdminRegistrationForm'])->name('admin.register.admin.form');
+    Route::post('/admin/register/admin', [PPDBController::class, 'registerAdmin'])->name('admin.register.admin.submit');
 });

@@ -101,6 +101,14 @@
     <h2>👑 Dasbor Admin Dinas (Approval Global)</h2>
     <p class="subtitle">Verifikasi dan setujui hasil seleksi yang diajukan oleh Operator Sekolah.</p>
 
+    <div class="table-container" style="margin-bottom: 40px;">
+        <h3>Manajemen Pengguna</h3>
+        <div style="padding: 15px;">
+            <a href="{{ route('admin.register.operator.form') }}" class="btn-primary" style="margin-right: 15px;">Register New Operator</a>
+            <a href="{{ route('admin.register.admin.form') }}" class="btn-primary">Register New Admin</a>
+        </div>
+    </div>
+
     <div class="table-container">
         <h3>Permintaan Approval Siswa</h3>
         <table>

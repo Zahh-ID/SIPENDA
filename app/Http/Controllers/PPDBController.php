@@ -246,19 +246,134 @@ public function logout(Request $request)
         return response()->json(['status' => 'success', 'message' => 'Approval berhasil diperbarui.']);
     }
     
-    public function getAllPendaftarApi()
-    {
-        if (!Auth::guard('web')->check()) {
-            return response()->json(["status" => "error", "message" => "Unauthorized."], 403);
+        public function getAllPendaftarApi()
+    
+        {
+    
+            if (!Auth::guard('web')->check()) {
+    
+                return response()->json(["status" => "error", "message" => "Unauthorized."], 403);
+    
+            }
+    
+            
+    
+            $pendaftar = Student::get([
+    
+                'nisn', 'nama_lengkap', 'sekolah_tujuan', 'jalur_pendaftaran', 'status_seleksi'
+    
+            ]);
+    
+    
+    
+            return response()->json([
+    
+                'status' => 'success', 
+    
+                'pendaftar' => $pendaftar
+    
+            ]);
+    
         }
-        
-        $pendaftar = Student::get([
-            'nisn', 'nama_lengkap', 'sekolah_tujuan', 'jalur_pendaftaran', 'status_seleksi'
-        ]);
-
-        return response()->json([
-            'status' => 'success', 
-            'pendaftar' => $pendaftar
-        ]);
+    
+    
+    
+        // Admin-only registration methods
+    
+        public function showOperatorRegistrationForm()
+    
+        {
+    
+            return view('auth.register-operator');
+    
+        }
+    
+    
+    
+        public function registerOperator(Request $request)
+    
+        {
+    
+            $request->validate([
+    
+                'nama_operator' => ['required', 'string', 'max:255'],
+    
+                'username' => ['required', 'string', 'max:255', 'unique:operators'],
+    
+                'sekolah_tujuan' => ['required', 'string', 'max:255'],
+    
+                'password' => ['required', 'string', 'min:8', 'confirmed'],
+    
+            ]);
+    
+    
+    
+            Operator::create([
+    
+                'nama_operator' => $request->nama_operator,
+    
+                'username' => $request->username,
+    
+                'sekolah_tujuan' => $request->sekolah_tujuan,
+    
+                'password_hash' => Hash::make($request->password),
+    
+            ]);
+    
+    
+    
+            return redirect()->route('admin.register.operator.form')->with('success', 'Operator registered successfully!');
+    
+        }
+    
+    
+    
+        public function showAdminRegistrationForm()
+    
+        {
+    
+            return view('auth.register-admin');
+    
+        }
+    
+    
+    
+        public function registerAdmin(Request $request)
+    
+        {
+    
+            $request->validate([
+    
+                'name' => ['required', 'string', 'max:255'],
+    
+                'username' => ['required', 'string', 'max:255', 'unique:users'],
+    
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+    
+                'password' => ['required', 'string', 'min:8', 'confirmed'],
+    
+            ]);
+    
+    
+    
+            User::create([
+    
+                'name' => $request->name,
+    
+                'username' => $request->username,
+    
+                'email' => $request->email,
+    
+                'password' => Hash::make($request->password),
+    
+            ]);
+    
+    
+    
+            return redirect()->route('admin.register.admin.form')->with('success', 'Admin registered successfully!');
+    
+        }
+    
     }
-}
+    
+    

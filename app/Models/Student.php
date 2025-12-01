@@ -3,10 +3,11 @@ namespace App\Models; // Namespace ini harus App\Models
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Student extends Authenticatable // Class harus Student
 {
-    use Notifiable;
+    use Notifiable, HasFactory;
 
     protected $fillable = [
         'nisn', 'nama_lengkap', 'jenjang_tujuan', 'sekolah_tujuan', 

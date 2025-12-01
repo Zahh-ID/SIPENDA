@@ -52,7 +52,7 @@
         </div>
     </div>
     
-    <div id="loading-status" style="display: none; text-align: center; font-weight: 600; color: #ff9800; margin-top: 20px;">
+    <div id="loading-status" style="display: none; text-align: center !important; font-weight: 600; color: #ff9800; margin-top: 20px;">
         <p>Memproses data sekolah...</p>
     </div>
 

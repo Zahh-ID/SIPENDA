@@ -55,7 +55,7 @@
         <div class="container">
             <p>&copy; 2025 SIPENDA - Jawa Timur. Hak Cipta Masih Pending.</p>
             <div class="footer-links">
-                <a href="#">FAQ</a> | <a href="#">Kontak Kami</a> | <a href="#">Kebijakan Privasi</a>
+                <a href="{{ route('faq') }}">FAQ</a> | <a href="{{ route('contact') }}">Kontak Kami</a> | <a href="{{ route('privacy') }}">Kebijakan Privasi</a>
             </div>
         </div>
     </footer>

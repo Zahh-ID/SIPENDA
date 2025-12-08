@@ -30,6 +30,7 @@ class SchoolFactory extends Factory
         return [
             'nama_sekolah' => $this->faker->unique()->lexify($jenjang . 'N ' . $this->faker->numberBetween(1, 150) . ' ' . $kota . ' ?'),
             'jenjang' => $jenjang,
+            'kota_kab' => $kota,
             'kuota' => $this->faker->numberBetween(80, 350),
             'detail' => 'Akreditasi A, Sekolah Unggulan di ' . $kota,
         ];

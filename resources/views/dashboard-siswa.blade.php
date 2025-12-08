@@ -59,6 +59,17 @@
         
         <div id="jadwal-test-container">
         </div>
+
+        <div id="change-school-section" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; display: none;">
+            <h4 style="color: #1a237e;">🏫 Ganti Sekolah Tujuan</h4>
+            <p style="font-size: 0.9em; color: #666;">Anda dapat mengganti sekolah tujuan selama status seleksi masih <strong>Pending</strong>.</p>
+            
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <input type="text" id="new-school-name" placeholder="Ketik Nama Sekolah Baru (Sesuai Daftar)" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <button id="btn-change-school" class="btn-primary" style="padding: 10px 20px; font-size: 0.9em;">Simpan Perubahan</button>
+            </div>
+            <p id="change-school-message" style="margin-top: 10px; font-size: 0.9em;"></p>
+        </div>
     </div>
 </section>
 @endsection
@@ -122,6 +133,11 @@ document.addEventListener('DOMContentLoaded', function() {
                          jadwalTestContainer.innerHTML = '';
                     }
 
+                    // Show Change School section only if status is Pending
+                    if (student.status_seleksi === 'Pending') {
+                        document.getElementById('change-school-section').style.display = 'block';
+                    }
+
                 } else {
                     studentDataContainer.innerHTML = `<p style="color: red;">${data.message}</p>`;
                 }
@@ -130,6 +146,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 studentDataContainer.innerHTML = `<p style="color: red;">Terjadi kesalahan saat memuat data: ${error.message}</p>`;
                 console.error('Fetch Error:', error);
             });
+
+        // Handle Change School
+        document.getElementById('btn-change-school').addEventListener('click', function() {
+            const newSchool = document.getElementById('new-school-name').value.trim();
+            const messageEl = document.getElementById('change-school-message');
+            
+            if (!newSchool) {
+                messageEl.style.color = 'red';
+                messageEl.textContent = 'Nama sekolah tidak boleh kosong.';
+                return;
+            }
+
+            messageEl.style.color = 'blue';
+            messageEl.textContent = 'Memproses...';
+
+            fetch("{{ route('student.update.school') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ sekolah_baru: newSchool })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    messageEl.style.color = 'green';
+                    messageEl.textContent = data.message;
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    messageEl.style.color = 'red';
+                    messageEl.textContent = data.message;
+                }
+            })
+            .catch(err => {
+                messageEl.style.color = 'red';
+                messageEl.textContent = 'Terjadi kesalahan sistem.';
+                console.error(err);
+            });
+        });
     });
 
 </script>

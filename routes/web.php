@@ -7,7 +7,10 @@ Route::get('/', fn() => view('index'))->name('home');
 Route::get('/info-jalur', fn() => view('info-jalur'))->name('info.jalur');
 Route::get('/jadwal', fn() => view('jadwal'))->name('jadwal');
 Route::get('/daftar-sekolah', [PPDBController::class, 'showDaftarSekolah'])->name('schools.index');
-Route::post('/api/get_schools', [PPDBController::class, 'getSchoolsApi'])->name('schools.api');
+Route::get('/faq', fn() => view('faq'))->name('faq');
+Route::get('/kontak', fn() => view('contact'))->name('contact');
+Route::get('/kebijakan-privasi', fn() => view('privacy'))->name('privacy');
+
 
 Route::get('/login', fn() => view('auth.login'))->name('login');
 
@@ -19,6 +22,7 @@ Route::post('/pendaftaran/submit', [PPDBController::class, 'registerStudent'])->
 Route::middleware('auth:student')->group(function () {
     Route::get('/dashboard-siswa', [PPDBController::class, 'dashboardStudent'])->name('student.dashboard');
     Route::get('/api/student/data', [PPDBController::class, 'getStudentDataApi'])->name('student.data.api');
+    Route::post('/api/student/update-sekolah', [PPDBController::class, 'updateSchool'])->name('student.update.school');
 });
 
 Route::middleware('auth:operator')->group(function () { 

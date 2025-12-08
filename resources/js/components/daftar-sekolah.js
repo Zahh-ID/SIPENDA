@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingStatus.style.color = '#ff9800';
         loadingStatus.innerHTML = '<p>Mencari sekolah terdekat dari server...</p>';
         
-        axios.post(window.schoolApiUrl, {
+        window.axios.post(window.schoolApiUrl, {
             jenjang: jenjang,
             daerah: daerah, 
             nama_sekolah: namaSekolah

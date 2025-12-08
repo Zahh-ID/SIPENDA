@@ -44,7 +44,14 @@ class PPDBController extends Controller
             'sekolah-tujuan' => 'required|string|max:255|exists:schools,nama_sekolah',
             'jalur' => 'required|string|max:100',
             'alamat' => 'required|string',
+            'scan_kk' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'scan_akta' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'scan_ijazah' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
+
+        $scanKkPath = $request->file('scan_kk')->store('documents', 'public');
+        $scanAktaPath = $request->file('scan_akta')->store('documents', 'public');
+        $scanIjazahPath = $request->file('scan_ijazah')->store('documents', 'public');
 
         \App\Models\Student::create([
             'nisn' => $validated['nisn'],
@@ -54,6 +61,9 @@ class PPDBController extends Controller
             'sekolah_tujuan' => $validated['sekolah-tujuan'],
             'jalur_pendaftaran' => $validated['jalur'],
             'alamat' => $validated['alamat'],
+            'scan_kk' => $scanKkPath,
+            'scan_akta' => $scanAktaPath,
+            'scan_ijazah' => $scanIjazahPath,
             'status_seleksi' => 'Pending',
             'status_approval' => 'Pending',
         ]);
@@ -129,6 +139,34 @@ public function logout(Request $request)
         ]);
     }
     
+    public function updateSchool(Request $request)
+    {
+        if (!Auth::guard('student')->check()) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
+
+        $request->validate([
+            'sekolah_baru' => 'required|string|exists:schools,nama_sekolah',
+        ]);
+
+        $student = Auth::guard('student')->user();
+
+        if ($student->status_seleksi !== 'Pending') {
+            return response()->json([
+                'status' => 'error', 
+                'message' => 'Tidak dapat mengganti sekolah karena status seleksi sudah diproses (' . $student->status_seleksi . ').'
+            ], 403);
+        }
+
+        $student->sekolah_tujuan = $request->sekolah_baru;
+        $student->save();
+
+        return response()->json([
+            'status' => 'success', 
+            'message' => 'Sekolah tujuan berhasil diperbarui menjadi ' . $request->sekolah_baru
+        ]);
+    }
+
     public function getStudentDataApi(Request $request)
     {
         $nisn = $request->query('nisn');

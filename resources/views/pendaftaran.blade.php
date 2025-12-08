@@ -38,6 +38,16 @@
             <label for="alamat">Alamat Tinggal (Sesuai KK):</label>
             <textarea id="alamat" name="alamat" rows="3" required placeholder="Alamat lengkap, RT/RW, Kelurahan"></textarea>
             
+            <p style="margin-top: 20px; font-weight: 600;">Upload Dokumen Persyaratan</p>
+            <label for="scan_kk">Scan Kartu Keluarga (KK):</label>
+            <input type="file" id="scan_kk" name="scan_kk" accept=".jpg,.jpeg,.png,.pdf" required>
+            
+            <label for="scan_akta">Scan Akta Kelahiran:</label>
+            <input type="file" id="scan_akta" name="scan_akta" accept=".jpg,.jpeg,.png,.pdf" required>
+            
+            <label for="scan_ijazah">Scan Ijazah / SKL:</label>
+            <input type="file" id="scan_ijazah" name="scan_ijazah" accept=".jpg,.jpeg,.png,.pdf" required>
+            
             <p style="margin-top: 20px; font-weight: 600;">Data Login (Untuk Cek Status)</p>
             <label for="password-baru">Buat Password:</label>
             <input type="password" id="password-baru" name="password_baru" required>
@@ -92,25 +102,32 @@
             return;
         }
         
-        const registrationData = {
-            _token: csrfToken,
-            nama_siswa: document.getElementById('nama-siswa').value,
-            nisn: document.getElementById('nisn').value,
-            password_baru: document.getElementById('password-baru').value,
-            jenjang: document.getElementById('jenjang').value,
-            'sekolah-tujuan': sekolahTujuan, 
-            jalur: document.getElementById('jalur').value,
-            alamat: document.getElementById('alamat').value
-        };
+        const formData = new FormData();
+        formData.append('_token', csrfToken);
+        formData.append('nama_siswa', document.getElementById('nama-siswa').value);
+        formData.append('nisn', document.getElementById('nisn').value);
+        formData.append('password_baru', document.getElementById('password-baru').value);
+        formData.append('jenjang', document.getElementById('jenjang').value);
+        formData.append('sekolah-tujuan', sekolahTujuan);
+        formData.append('jalur', document.getElementById('jalur').value);
+        formData.append('alamat', document.getElementById('alamat').value);
+        
+        // Append files
+        const kkFile = document.getElementById('scan_kk').files[0];
+        const aktaFile = document.getElementById('scan_akta').files[0];
+        const ijazahFile = document.getElementById('scan_ijazah').files[0];
+
+        if (kkFile) formData.append('scan_kk', kkFile);
+        if (aktaFile) formData.append('scan_akta', aktaFile);
+        if (ijazahFile) formData.append('scan_ijazah', ijazahFile);
 
         messageDiv.style.backgroundColor = '#e0f7fa';
         messageDiv.style.color = '#006064';
-        messageDiv.innerHTML = 'Sedang memproses pendaftaran...';
+        messageDiv.innerHTML = 'Sedang memproses pendaftaran dan mengupload dokumen...';
 
         fetch("{{ route('register.submit') }}", {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(registrationData)
+            body: formData 
         })
         .then(response => {
             if (!response.ok) {

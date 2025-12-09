@@ -18,6 +18,7 @@ Route::post('/logout', [PPDBController::class, 'logout'])->name('logout');
 
 Route::get('/pendaftaran', [PPDBController::class, 'showRegistrationForm'])->name('register.form');
 Route::post('/pendaftaran/submit', [PPDBController::class, 'registerStudent'])->name('register.submit');
+Route::get('/api/schools-search', [PPDBController::class, 'getSchoolsApi'])->name('schools.api');
 
 Route::middleware('auth:student')->group(function () {
     Route::get('/dashboard-siswa', [PPDBController::class, 'dashboardStudent'])->name('student.dashboard');
@@ -30,12 +31,15 @@ Route::middleware('auth:operator')->group(function () {
     Route::get('/api/operator/pendaftar', [PPDBController::class, 'getPendaftarBySekolahApi'])->name('operator.pendaftar.api');
     Route::post('/api/operator/seleksi', [PPDBController::class, 'updateSeleksiOperator'])->name('operator.seleksi.update');
     Route::post('/api/operator/ajukan/{sekolah}', [PPDBController::class, 'ajukanKeAdmin'])->name('operator.ajukan');
+    Route::post('/api/operator/link-administrasi', [PPDBController::class, 'updateLinkAdministrasi'])->name('operator.link.update');
+    Route::get('/api/operator/link-administrasi', [PPDBController::class, 'getLinkAdministrasiApi'])->name('operator.link.get');
 });
 
 Route::middleware('auth:web')->group(function () { 
     Route::get('/admin/dashboard', [PPDBController::class, 'dashboardAdmin'])->name('admin.dashboard'); 
     Route::get('/api/admin/pengajuan', [PPDBController::class, 'getPengajuanOperatorApi'])->name('admin.pengajuan.api');
     Route::post('/api/admin/approval', [PPDBController::class, 'updateApprovalAdmin'])->name('admin.approval.update');
+    Route::post('/api/admin/approval/all', [PPDBController::class, 'approveAllAdmin'])->name('admin.approval.all');
     Route::get('/api/admin/all_pendaftar', [PPDBController::class, 'getAllPendaftarApi'])->name('admin.pendaftar.api');
 
     // Secret Registration Routes

@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'PPDB V.2.0')</title>
+    <title>@yield('title', 'SIPENDA')</title>
+    <link rel="icon" href="{{ asset('assets/images/logo.svg') }}">
     
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('style.css') }}">

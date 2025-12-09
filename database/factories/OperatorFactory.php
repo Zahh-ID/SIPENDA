@@ -35,7 +35,7 @@ class OperatorFactory extends Factory
         return [
             'username' => $this->faker->unique()->userName(),
             'nama_operator' => $this->faker->name(),
-            'sekolah_tujuan' => School::all()->random()->id, // Assign a random existing school ID
+            'sekolah_tujuan' => School::all()->random()->nama_sekolah, // Assign a random existing school Name
             'password_hash' => Hash::make('password'),
         ];
     }

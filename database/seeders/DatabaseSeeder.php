@@ -32,18 +32,46 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'), // Login dengan password: "password"
         ]);
         
-        // 4. Buat 150 data sekolah secara otomatis menggunakan factory.
-        School::factory(50)->create();
-        
-        // Buat 10 data Operator Sekolah
-        Operator::factory(10)->create();
+        // 4. Buat Sekolah Spesifik untuk relasi
+        School::create([
+            'nama_sekolah' => 'SMAN 1 Surabaya',
+            'jenjang' => 'SMA',
+            'kuota' => 200, // Menggabungkan semua kuota ke satu kolom 'kuota'
+            'kota_kab' => 'Surabaya',
+            'detail' => 'Sekolah unggulan di Surabaya dengan fasilitas lengkap.',
+        ]);
 
-        // 5. Buat 150 data siswa pendaftar secara otomatis menggunakan factory.
-        // Tambahkan pengecekan untuk memastikan sekolah sudah ada sebelum membuat siswa.
+        // Panggil Seeder Sekolah yang baru (Generate data berdasarkan wilayah)
+        $this->call(SchoolSeeder::class);
+        
+        // Buat 1 Operator Spesifik untuk testing login
+        Operator::create([
+            'nama_operator' => 'Operator SMAN 1 Surabaya',
+            'username' => 'operator',
+            'password_hash' => Hash::make('password'),
+            'sekolah_tujuan' => 'SMAN 1 Surabaya',
+        ]);
+
+        // Buat data Operator Sekolah acak
+        Operator::factory(5)->create();
+
+        // Buat 1 Siswa Spesifik untuk testing login
+        Student::create([
+            'nisn' => '1234567890',
+            'nama_lengkap' => 'Siswa Tester',
+            'password_hash' => Hash::make('password'),
+            'jenjang_tujuan' => 'SMA',
+            'sekolah_tujuan' => 'SMAN 1 Surabaya',
+            'jalur_pendaftaran' => 'Zonasi',
+            'alamat' => 'Jl. Testing No. 1',
+            'status_seleksi' => 'Pending',
+            'status_approval' => 'Pending',
+        ]);
+
+        // Buat data siswa acak
         if (School::count() > 0) {
-            Student::factory(200)->create();
+            Student::factory(20)->create();
         } else {
-            // Tampilkan peringatan di konsol jika tidak ada sekolah yang bisa dijadikan tujuan.
             $this->command->warn('Tidak ada data sekolah. Seeding untuk siswa dilewati.');
         }
     }

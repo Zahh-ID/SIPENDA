@@ -15,4 +15,4 @@ use App\Http\Controllers\PPDBController;
 |
 */
 
-Route::post('/get_schools', [PPDBController::class, 'getSchoolsApi'])->name('schools.api');
+// Route::post('/get_schools', [PPDBController::class, 'getSchoolsApi'])->name('schools.api');

@@ -9,6 +9,6 @@ class School extends Model
     use HasFactory;
 
     protected $fillable = [
-        'nama_sekolah', 'jenjang', 'kuota', 'detail'
+        'npsn', 'nama_sekolah', 'jenjang', 'kuota', 'detail', 'kota_kab', 'kecamatan', 'link_administrasi'
     ];
 }

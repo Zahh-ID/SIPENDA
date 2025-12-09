@@ -64,9 +64,9 @@
             <h4 style="color: #1a237e;">🏫 Ganti Sekolah Tujuan</h4>
             <p style="font-size: 0.9em; color: #666;">Anda dapat mengganti sekolah tujuan selama status seleksi masih <strong>Pending</strong>.</p>
             
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <input type="text" id="new-school-name" placeholder="Ketik Nama Sekolah Baru (Sesuai Daftar)" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                <button id="btn-change-school" class="btn-primary" style="padding: 10px 20px; font-size: 0.9em;">Simpan Perubahan</button>
+            <div style="margin-top: 15px;">
+                <p>Klik tombol di bawah ini untuk mencari dan memilih sekolah baru.</p>
+                <a href="{{ route('schools.index') }}" class="btn-primary" style="display: inline-block; padding: 10px 20px; font-size: 0.9em; text-decoration: none; color: white;">Cari & Ganti Sekolah</a>
             </div>
             <p id="change-school-message" style="margin-top: 10px; font-size: 0.9em;"></p>
         </div>
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const welcomeMessage = document.getElementById('welcome-message');
         const jadwalTestContainer = document.getElementById('jadwal-test-container');
 
-        const loggedInNisn = sessionStorage.getItem('loggedInNisn');
+        const loggedInNisn = "{{ Auth::guard('student')->user()->nisn }}";
         const studentDataUrl = "{{ route('student.data.api') }}";
         
         if (!loggedInNisn) {
@@ -112,7 +112,33 @@ document.addEventListener('DOMContentLoaded', function() {
                         </ul>
                     `;
                     
-                    if (student.jadwal_test) {
+                    if (finalStatus === 'Diterima') {
+                        let adminLinkHtml = '';
+                        if (student.link_administrasi) {
+                             adminLinkHtml = `
+                                <div style="margin-top: 15px;">
+                                    <p>Silakan klik tombol di bawah untuk melanjutkan proses administrasi sekolah:</p>
+                                    <a href="${student.link_administrasi}" target="_blank" class="btn-primary" style="display: inline-block; padding: 10px 20px; color: white; text-decoration: none; border-radius: 5px;">
+                                        📄 Lanjut Administrasi Sekolah
+                                    </a>
+                                </div>
+                             `;
+                        }
+
+                        jadwalTestContainer.innerHTML = `
+                            <div class="jadwal-info" style="border-left-color: #2e7d32; background-color: #e8f5e9;">
+                                <p>✅ **SELAMAT!** Anda DITERIMA di <strong>${student.sekolah_tujuan}</strong>.</p>
+                                ${adminLinkHtml}
+                            </div>
+                        `;
+                    } else if (finalStatus === 'Ditolak' || student.status_seleksi === 'Ditolak') {
+                         jadwalTestContainer.innerHTML = `
+                            <div class="jadwal-info" style="border-left-color: #c62828; background-color: #ffebee;">
+                                <p>⚠️ Maaf, Anda dinyatakan <strong>TIDAK DITERIMA</strong> di sekolah pilihan Anda.</p>
+                                <p>Tetap semangat dan coba lagi di kesempatan lain.</p>
+                            </div>
+                        `;
+                    } else if (student.jadwal_test) {
                         const dateFormatted = new Date(student.jadwal_test).toLocaleDateString('id-ID', {
                             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                         });
@@ -121,12 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="jadwal-info">
                                 <p>🗓️ **Jadwal Test Anda:** ${dateFormatted}</p>
                                 <p>Harap hadir di ${student.sekolah_diterima || student.sekolah_tujuan} tepat waktu.</p>
-                            </div>
-                        `;
-                    } else if (finalStatus === 'Diterima') {
-                        jadwalTestContainer.innerHTML = `
-                            <div class="jadwal-info" style="border-left-color: #2e7d32;">
-                                <p>✅ **SELAMAT!** Anda DITERIMA. Jadwal Daftar Ulang segera diumumkan.</p>
                             </div>
                         `;
                     } else {

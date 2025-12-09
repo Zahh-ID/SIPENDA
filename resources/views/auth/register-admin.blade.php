@@ -3,16 +3,16 @@
 
 @section('content')
 <section class="page-content container">
-    <div class="form-container" style="max-width: 600px;">
+    <div class="form-container small">
         <h2>Register New Admin</h2>
         <p class="subtitle">Create an account for a new administrator.</p>
 
         @if(session('success'))
-            <div style="color: green; margin-bottom: 15px;">{{ session('success') }}</div>
+            <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
         @if($errors->any())
-            <div style="color: red; margin-bottom: 15px;">
+            <div class="alert alert-error">
                 <ul>
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>

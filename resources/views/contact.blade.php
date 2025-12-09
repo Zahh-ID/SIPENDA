@@ -8,7 +8,7 @@
 
     <div class="contact-wrapper">
         <div class="contact-card">
-            <h3 style="color: #004d40; margin-top: 0; margin-bottom: 25px;">Informasi Kontak</h3>
+            <h3>Informasi Kontak</h3>
             
             <div class="contact-info-item">
                 <div class="contact-icon">📍</div>
@@ -44,25 +44,25 @@
         </div>
 
         <div class="contact-card">
-            <h3 style="color: #004d40; margin-top: 0; margin-bottom: 25px;">Kirim Pesan</h3>
+            <h3>Kirim Pesan</h3>
             <form action="#" method="POST" onsubmit="event.preventDefault(); alert('Pesan Anda telah terkirim! (Simulasi)');">
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label for="name" style="display: block; margin-bottom: 5px;">Nama Lengkap</label>
-                    <input type="text" id="name" class="form-control" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                <div class="form-group">
+                    <label for="name">Nama Lengkap</label>
+                    <input type="text" id="name" class="form-control" required>
                 </div>
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label for="email" style="display: block; margin-bottom: 5px;">Email</label>
-                    <input type="email" id="email" class="form-control" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" class="form-control" required>
                 </div>
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label for="subject" style="display: block; margin-bottom: 5px;">Subjek</label>
-                    <input type="text" id="subject" class="form-control" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                <div class="form-group">
+                    <label for="subject">Subjek</label>
+                    <input type="text" id="subject" class="form-control" required>
                 </div>
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="message" style="display: block; margin-bottom: 5px;">Pesan</label>
-                    <textarea id="message" rows="5" class="form-control" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px;"></textarea>
+                <div class="form-group">
+                    <label for="message">Pesan</label>
+                    <textarea id="message" rows="5" class="form-control" required></textarea>
                 </div>
-                <button type="submit" class="btn-primary" style="width: 100%;">Kirim Pesan</button>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 20px;">Kirim Pesan</button>
             </form>
         </div>
     </div>

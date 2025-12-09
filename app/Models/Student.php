@@ -11,7 +11,8 @@ class Student extends Authenticatable // Class harus Student
 
     protected $fillable = [
         'nisn', 'nama_lengkap', 'jenjang_tujuan', 'sekolah_tujuan', 
-        'jalur_pendaftaran', 'alamat', 'password_hash', 'status_seleksi', 'status_approval'
+        'jalur_pendaftaran', 'alamat', 'kota_kab', 'kecamatan', 'password_hash', 'status_seleksi', 'status_approval',
+        'scan_kk', 'scan_akta', 'scan_ijazah', 'scan_prestasi'
     ];
 
     protected $hidden = ['password_hash'];

@@ -1,6 +1,10 @@
-<div class="form-container" style="max-width: 450px;">
+<div class="form-container">
+    <div style="text-align: center; margin-bottom: 25px;">
+        <h3 style="margin-bottom: 5px; color: #1a237e;">Selamat Datang</h3>
+        <p style="color: #6c757d; font-size: 0.9em;">Silakan login untuk melanjutkan</p>
+    </div>
     <div class="login-tab-container">
-        <div class="login-tab @if($loginType === 'siswa') active @endif" wire:click="setLoginType('siswa')">Siswa / Orang Tua</div>
+        <div class="login-tab @if($loginType === 'siswa') active @endif" wire:click="setLoginType('siswa')">Siswa</div>
         <div class="login-tab @if($loginType === 'operator') active @endif" wire:click="setLoginType('operator')">Operator Sekolah</div>
         <div class="login-tab @if($loginType === 'admin') active @endif" wire:click="setLoginType('admin')">Admin Dinas</div>
     </div>

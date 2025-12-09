@@ -21,7 +21,8 @@ class PPDBController extends Controller
 
     public function showDaftarSekolah()
     {
-        return view('daftar-sekolah');
+        $student = Auth::guard('student')->user();
+        return view('daftar-sekolah', compact('student'));
     }
     
     
@@ -43,15 +44,29 @@ class PPDBController extends Controller
             'jenjang' => 'required|string|in:SD,SMP,SMA',
             'sekolah-tujuan' => 'required|string|max:255|exists:schools,nama_sekolah',
             'jalur' => 'required|string|max:100',
+            'kota_kab' => 'required|string',
+            'kecamatan' => 'required|string',
             'alamat' => 'required|string',
             'scan_kk' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
             'scan_akta' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
             'scan_ijazah' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'scan_prestasi' => 'required_if:jalur,Prestasi|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
+
+        // Validasi Zonasi
+        if ($validated['jalur'] === 'Zonasi') {
+            $school = \App\Models\School::where('nama_sekolah', $validated['sekolah-tujuan'])->first();
+            if ($school && strcasecmp($school->kecamatan, $validated['kecamatan']) !== 0) {
+                 throw \Illuminate\Validation\ValidationException::withMessages([
+                    'kecamatan' => ["Untuk jalur Zonasi, kecamatan domisili harus sama dengan kecamatan sekolah ({$school->kecamatan})."]
+                ]);
+            }
+        }
 
         $scanKkPath = $request->file('scan_kk')->store('documents', 'public');
         $scanAktaPath = $request->file('scan_akta')->store('documents', 'public');
         $scanIjazahPath = $request->file('scan_ijazah')->store('documents', 'public');
+        $scanPrestasiPath = $request->file('scan_prestasi') ? $request->file('scan_prestasi')->store('documents', 'public') : null;
 
         \App\Models\Student::create([
             'nisn' => $validated['nisn'],
@@ -60,10 +75,13 @@ class PPDBController extends Controller
             'jenjang_tujuan' => $validated['jenjang'],
             'sekolah_tujuan' => $validated['sekolah-tujuan'],
             'jalur_pendaftaran' => $validated['jalur'],
+            'kota_kab' => $validated['kota_kab'],
+            'kecamatan' => $validated['kecamatan'],
             'alamat' => $validated['alamat'],
             'scan_kk' => $scanKkPath,
             'scan_akta' => $scanAktaPath,
             'scan_ijazah' => $scanIjazahPath,
+            'scan_prestasi' => $scanPrestasiPath,
             'status_seleksi' => 'Pending',
             'status_approval' => 'Pending',
         ]);
@@ -105,37 +123,41 @@ public function logout(Request $request)
 
     public function getSchoolsApi(Request $request)
     {
-        $jenjang = $request->jenjang; 
-        $daerah = $request->daerah;
-        $namaSekolah = $request->nama_sekolah;
-        
-        $schoolsQuery = School::where('jenjang', $jenjang);
+        $jenjang = $request->input('jenjang');
+        $daerah = $request->input('daerah');
+        $nama = $request->input('nama');
+        $kecamatan = $request->input('kecamatan'); 
 
-        if (!empty($daerah)) {
-            $schoolsQuery->where('kota_kab', 'LIKE', '%' . $daerah . '%');
+        $query = School::query();
+
+        if ($jenjang) {
+            $query->where('jenjang', $jenjang);
         }
 
-        if (!empty($namaSekolah)) {
-            $schoolsQuery->where('nama_sekolah', 'LIKE', '%' . $namaSekolah . '%');
+        if ($daerah) {
+            $query->where('kota_kab', 'like', '%' . $daerah . '%');
         }
         
-        $schools = $schoolsQuery->limit(5)->get();
-
-        $simulated_distance = ['1.2 km', '2.5 km', '3.8 km', '4.9 km', '6.1 km'];
-
-        if ($schools->isNotEmpty()) {
-            $schools = $schools->map(function ($school, $index) use ($simulated_distance, $daerah) {
-                $school->jarak = $simulated_distance[$index % count($simulated_distance)];
-                $school->detail = "Sekolah di zonasi {$daerah}";
-                return $school;
-            });
-            return response()->json(['status' => 'success', 'schools' => $schools]);
+        if ($kecamatan) {
+            $query->where('kecamatan', 'like', '%' . $kecamatan . '%');
         }
-        
+
+        if ($nama) {
+            $query->where('nama_sekolah', 'like', '%' . $nama . '%');
+        }
+
+        $schools = $query->select('npsn', 'nama_sekolah', 'kota_kab', 'kecamatan', 'jenjang', 'kuota', 'detail')->limit(20)->get();
+
+        if ($schools->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Tidak ada sekolah ditemukan dengan kriteria tersebut.'
+            ]);
+        }
+
         return response()->json([
-            'status' => 'not_found', 
-            'schools' => [], 
-            'message' => "Tidak ada sekolah {$jenjang} yang ditemukan di {$daerah}."
+            'status' => 'success',
+            'schools' => $schools
         ]);
     }
     
@@ -158,6 +180,14 @@ public function logout(Request $request)
             ], 403);
         }
 
+        $newSchool = School::where('nama_sekolah', $request->sekolah_baru)->first();
+        if ($newSchool && $newSchool->jenjang !== $student->jenjang_tujuan) {
+             return response()->json([
+                'status' => 'error', 
+                'message' => 'Gagal ganti sekolah. Jenjang sekolah baru (' . $newSchool->jenjang . ') tidak sama dengan jenjang pendaftaran Anda (' . $student->jenjang_tujuan . ').'
+            ], 403);
+        }
+
         $student->sekolah_tujuan = $request->sekolah_baru;
         $student->save();
 
@@ -170,12 +200,15 @@ public function logout(Request $request)
     public function getStudentDataApi(Request $request)
     {
         $nisn = $request->query('nisn');
-    $student = Student::where('nisn', $nisn)->first([
-        'nama_lengkap', 'nisn', 'jenjang_tujuan', 'sekolah_tujuan', 'jalur_pendaftaran', 
-        'status_seleksi', 'status_approval', 'jadwal_test'
-    ]);
+        $student = Student::where('nisn', $nisn)->first([
+            'nama_lengkap', 'nisn', 'jenjang_tujuan', 'sekolah_tujuan', 'jalur_pendaftaran', 
+            'status_seleksi', 'status_approval', 'jadwal_test'
+        ]);
 
         if ($student) {
+            $school = School::where('nama_sekolah', $student->sekolah_tujuan)->first();
+            $student->link_administrasi = $school ? $school->link_administrasi : null;
+            
             return response()->json(["status" => "success", "student" => $student]);
         } else {
             return response()->json(["status" => "error", "message" => "Data siswa tidak ditemukan."], 404);
@@ -201,8 +234,9 @@ public function logout(Request $request)
         
         $pendaftar = Student::where('sekolah_tujuan', $sekolah)
                             ->get([
-                                'id', 'nisn', 'nama_lengkap', 'jalur_pendaftaran', 
-                                'status_seleksi', 'status_approval', 'jadwal_test'
+                                'id', 'nisn', 'nama_lengkap', 'jalur_pendaftaran', 'jenjang_tujuan',
+                                'status_seleksi', 'status_approval', 'jadwal_test',
+                                'scan_kk', 'scan_akta', 'scan_ijazah', 'scan_prestasi' // Add documents
                             ]);
 
         return response()->json(['status' => 'success', 'pendaftar' => $pendaftar]);
@@ -283,6 +317,20 @@ public function logout(Request $request)
         
         return response()->json(['status' => 'success', 'message' => 'Approval berhasil diperbarui.']);
     }
+
+    public function approveAllAdmin(Request $request)
+    {
+        if (!Auth::guard('web')->check()) { return response()->json(['message' => 'Unauthorized'], 403); }
+
+        $updatedCount = Student::whereIn('status_seleksi', ['Diterima', 'Ditolak'])
+               ->where('status_approval', 'Pending')
+               ->update(['status_approval' => 'Approved']);
+
+        return response()->json([
+            'status' => 'success', 
+            'message' => "Berhasil menyetujui {$updatedCount} siswa secara massal."
+        ]);
+    }
     
         public function getAllPendaftarApi()
     
@@ -316,7 +364,32 @@ public function logout(Request $request)
     
     
     
-        // Admin-only registration methods
+        public function updateLinkAdministrasi(Request $request)
+    {
+        $operator = Auth::guard('operator')->user();
+        if (!$operator) { return response()->json(['message' => 'Unauthorized'], 403); }
+
+        $request->validate(['link' => 'required|url']);
+
+        $school = School::where('nama_sekolah', $operator->sekolah_tujuan)->first();
+        if ($school) {
+            $school->link_administrasi = $request->link;
+            $school->save();
+            return response()->json(['status' => 'success', 'message' => 'Link administrasi berhasil disimpan.']);
+        }
+        return response()->json(['status' => 'error', 'message' => 'Sekolah tidak ditemukan.'], 404);
+    }
+    
+    public function getLinkAdministrasiApi()
+    {
+        $operator = Auth::guard('operator')->user();
+         if (!$operator) { return response()->json(['link' => '']); }
+         
+         $school = School::where('nama_sekolah', $operator->sekolah_tujuan)->first();
+         return response()->json(['link' => $school ? $school->link_administrasi : '']);
+    }
+
+    // Admin-only registration methods
     
         public function showOperatorRegistrationForm()
     
@@ -338,7 +411,7 @@ public function logout(Request $request)
     
                 'username' => ['required', 'string', 'max:255', 'unique:operators'],
     
-                'sekolah_tujuan' => ['required', 'string', 'max:255'],
+                'sekolah_tujuan' => ['required', 'string', 'max:255', 'exists:schools,nama_sekolah'],
     
                 'password' => ['required', 'string', 'min:8', 'confirmed'],
     

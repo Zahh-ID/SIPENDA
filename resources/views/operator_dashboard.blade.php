@@ -2,92 +2,7 @@
 @section('title', 'Dasbor Operator - PPDB V.2.0')
 
 @section('styles')
-    <style>
-        .table-container td:nth-child(5) {
-            padding: 8px;
-        }
-        
-        .jadwal-control {
-            display: flex; 
-            gap: 5px;
-            align-items: center; 
-        }
-        .btn-simpan-jadwal {
-            padding: 3px 8px;
-            font-size: 0.8em;
-            background-color: #1a237e;
-            color: white;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-        }
-        .action-btns {
-            display: flex;
-            gap: 5px;
-        }
-        .action-btns button.btn-small {
-            padding: 5px 8px;
-            font-size: 0.9em;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-        }
-
-        .action-btns button.bg-red-700 {
-            background-color: #D32F2F; /* Tolak */
-        }
-        .admin-dashboard { padding: 40px 0; }
-        .stat-cards { display: flex; gap: 20px; margin-bottom: 30px; }
-        .stat-card { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .stat-card p.count { font-size: 2em; font-weight: 700; color: #1a237e; }
-        .table-container { overflow-x: auto; margin-top: 20px; }
-        .table-container table { width: 100%; border-collapse: collapse; }
-        .table-container th, .table-container td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        .status { padding: 5px 10px; border-radius: 4px; font-weight: 600; }
-        .status.pending { background-color: #fff3e0; color: #e65100; }
-        .status.diterima { background-color: #e8f5e9; color: #2e7d32; }
-        .status.ditolak { background-color: #ffebee; color: #c62828; }
-        .action-btns { display: flex; gap: 5px; }
-
-        @media (max-width: 768px) {
-            .stat-cards {
-                flex-direction: column;
-            }
-            .table-container table thead {
-                display: none;
-            }
-            .table-container table, .table-container table tbody, .table-container table tr, .table-container table td {
-                display: block;
-                width: 100%;
-            }
-            .table-container table tr {
-                margin-bottom: 15px;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                padding: 10px;
-            }
-            .table-container table td {
-                text-align: right;
-                padding-left: 50%;
-                position: relative;
-                border: none;
-                padding-bottom: 5px;
-            }
-            .table-container table td::before {
-                content: attr(data-label);
-                position: absolute;
-                left: 10px;
-                width: 45%;
-                padding-right: 10px;
-                white-space: nowrap;
-                text-align: left;
-                font-weight: bold;
-            }
-            .action-btns, .jadwal-control {
-                justify-content: flex-end;
-            }
-        }
-    </style>
+    {{-- Styles moved to public/style.css --}}
 @endsection
 
 @section('content')
@@ -103,12 +18,27 @@
 
     <div class="stat-cards">
         <div class="stat-card">
-            <h4>Total Pendaftar di Sekolah Ini</h4>
+            <h4>Total Pendaftar</h4>
             <p class="count" id="total-pendaftar">Memuat...</p>
         </div>
         <div class="stat-card">
-            <h4>Perlu Diverifikasi</h4>
+            <h4>Perlu Verifikasi</h4>
             <p class="count" id="perlu-verifikasi">Memuat...</p>
+        </div>
+        <div class="stat-card" style="flex: 2; border-bottom-color: var(--secondary-color);">
+            <h4>Link Administrasi Sekolah</h4>
+            <div style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+                <div style="flex: 1; position: relative;">
+                    <i class="fas fa-link" style="position: absolute; left: 15px; top: 15px; color: #a0aec0;"></i>
+                    <input type="url" id="link-administrasi" placeholder="https://forms.google.com/..." class="form-control" style="padding-left: 40px; border-radius: 50px;">
+                </div>
+                <button onclick="saveLinkAdministrasi()" class="btn-primary" style="padding: 12px 25px; border-radius: 50px;">
+                    Simpan <i class="fas fa-save" style="margin-left: 5px;"></i>
+                </button>
+            </div>
+            <p style="font-size: 0.9em; color: #718096; margin-top: 10px; margin-left: 10px;">
+                <i class="fas fa-info-circle"></i> Link ini akan muncul di dasbor siswa yang dinyatakan <strong>DITERIMA</strong>.
+            </p>
         </div>
     </div>
 
@@ -121,6 +51,7 @@
                     <th>Nama Siswa</th>
                     <th>NISN</th>
                     <th>Jalur</th>
+                    <th>Dokumen</th>
                     <th>Jadwal Test</th>
                     <th>Status Seleksi</th>
                     <th>Aksi</th>
@@ -142,7 +73,27 @@
         if (typeof window.fetchDataPendaftar === 'function') {
             window.fetchDataPendaftar(); 
         }
+        fetchLinkAdministrasi();
     });
+
+    function fetchLinkAdministrasi() {
+        axios.get('{{ route('operator.link.get') }}')
+             .then(res => {
+                 if (res.data.link) {
+                     document.getElementById('link-administrasi').value = res.data.link;
+                 }
+             })
+             .catch(console.error);
+    }
+    
+    window.saveLinkAdministrasi = function() {
+        const link = document.getElementById('link-administrasi').value;
+        if (!link) { alert('Mohon isi link terlebih dahulu.'); return; }
+        
+        axios.post('{{ route('operator.link.update') }}', { link: link })
+             .then(res => alert(res.data.message))
+             .catch(err => alert('Gagal menyimpan link. Pastikan format URL benar (http/https).'));
+    }
     
     window.submitApproval = function(sekolahName) {
         if (!confirm(`Apakah Anda yakin mengajukan hasil seleksi ${sekolahName} ke Admin Dinas?`)) {

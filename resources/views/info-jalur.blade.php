@@ -1,5 +1,5 @@
 @extends('layouts.main')
-@section('title', 'Info Jalur & Kuota - PPDB V.2.0')
+@section('title', 'Info Jalur & Kuota - SIPENDA')
 
 @section('content')
 <section class="page-content container">

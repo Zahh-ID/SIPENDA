@@ -1,5 +1,5 @@
 @extends('layouts.main')
-@section('title', 'Dasbor Operator - PPDB V.2.0')
+@section('title', 'Dasbor Operator - SIPENDA')
 
 @section('styles')
     {{-- Styles moved to public/style.css --}}

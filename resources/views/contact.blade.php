@@ -1,5 +1,5 @@
 @extends('layouts.main')
-@section('title', 'Kontak Kami - PPDB V.2.0')
+@section('title', 'Kontak Kami - SIPENDA')
 
 @section('content')
 <section class="page-content container">

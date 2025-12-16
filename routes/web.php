@@ -10,7 +10,7 @@ Route::get('/daftar-sekolah', [PPDBController::class, 'showDaftarSekolah'])->nam
 Route::get('/faq', fn() => view('faq'))->name('faq');
 Route::get('/kontak', fn() => view('contact'))->name('contact');
 Route::get('/kebijakan-privasi', fn() => view('privacy'))->name('privacy');
-
+Route::get('/kerangka', [PPDBController::class, 'kerangka'])->name('kerangka');
 
 Route::get('/login', fn() => view('auth.login'))->name('login');
 

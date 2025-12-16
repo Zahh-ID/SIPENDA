@@ -1,5 +1,5 @@
 @extends('layouts.main')
-@section('title', 'Beranda - PPDB V.2.0')
+@section('title', 'Beranda - SIPENDA')
 
 @section('scripts')
 

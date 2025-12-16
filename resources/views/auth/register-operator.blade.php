@@ -1,5 +1,5 @@
 @extends('layouts.main')
-@section('title', 'Register New Operator')
+@section('title', 'Register New Operator - SIPENDA')
 
 @section('content')
 <section class="page-content container">

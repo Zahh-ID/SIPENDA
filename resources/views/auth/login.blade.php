@@ -1,5 +1,5 @@
 @extends('layouts.auth')
-@section('title', 'Login - PPDB V.2.0')
+@section('title', 'Login - SIPENDA')
 
 @section('content')
 <section class="page-content container auth-page">

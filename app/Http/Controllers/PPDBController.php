@@ -13,6 +13,11 @@ use Illuminate\Validation\ValidationException;
 
 class PPDBController extends Controller
 {
+    public function kerangka()
+    {
+        return view('kerangka');
+    }
+
     public function showRegistrationForm(Request $request)
     {
         $sekolahTujuan = $request->query('sekolah', '');

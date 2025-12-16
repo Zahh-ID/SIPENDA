@@ -1,5 +1,5 @@
 @extends('layouts.main')
-@section('title', 'Daftar Sekolah - PPDB V.2.0')
+@section('title', 'Daftar Sekolah - SIPENDA')
 
 @section('content')
 {{-- Styles moved to public/style.css --}}

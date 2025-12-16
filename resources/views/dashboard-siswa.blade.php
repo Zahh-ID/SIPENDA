@@ -1,5 +1,5 @@
 @extends('layouts.main')
-@section('title', 'Dasbor Siswa - PPDB V.2.0')
+@section('title', 'Dasbor Siswa - SIPENDA')
 
 @section('styles')
     <style>
